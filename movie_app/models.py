@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Director(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True)
     movies = models.ManyToManyField("Movie", blank=True, null=True, related_name="director_movies")
 
     def __str__(self):
@@ -23,7 +23,7 @@ class Movie(models.Model):
     description = models.TextField(blank=True, null=True)
     duration = models.DurationField(null=True)
     reviews = models.ManyToManyField("Review", blank=True, null=True)
-    director = models.ForeignKey("Director", on_delete=models.SET_NULL, null=True, related_name="director_movie")
+    director = models.ForeignKey("Director", on_delete=models.CASCADE, blank=True, null=True, related_name="director_movie")
 
     def __str__(self):
         return self.title
