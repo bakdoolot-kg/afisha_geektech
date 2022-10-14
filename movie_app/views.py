@@ -1,6 +1,13 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from .serializers import DirectorsListSerializer, \
+    MoviesListSerializer, \
+    ReviewsListSerializer, \
+    MoviesReviewSerializer, \
+    MovieCreateSerializer, \
+    MovieUpdateSerializer, \
+    DirectorBaseValidateSerializer, ReviewBaseValidateSerializer
 from .serializers import DirectorsListSerializer, MoviesListSerializer, ReviewsListSerializer, MoviesReviewSerializer
 from .models import Director, Movie, Review
 
@@ -13,6 +20,11 @@ def movies_view(request):
         data = MoviesListSerializer(movies, many=True).data
         return Response(data=data)
     elif request.method == "POST":
+        serializer = MovieCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'message': 'data with errors',
+                                  'error': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         movie = Movie.objects.create(
             title=request.data.get("title"),
             description=request.data.get("description"),
@@ -40,6 +52,8 @@ def movie_item_view(request, id):
         return Response(data={"message": "Successfully removed!"},
                         status=status.HTTP_204_NO_CONTENT)
     else:
+        serializer = MovieUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         movie.title = request.data.get("title")
         movie.description = request.data.get("description")
         movie.duration = request.data.get("duration")
@@ -58,6 +72,11 @@ def directors_view(request):
         data = DirectorsListSerializer(directors, many=True).data
         return Response(data=data)
     elif request.method == 'POST':
+        serializer = DirectorBaseValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'message': 'data with errors',
+                                  'error': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         director = Director.objects.create(
             name=request.data.get('name'),
         )
@@ -82,6 +101,8 @@ def director_item_view(request, id):
         return Response(data={'message': 'Successfully removed!'},
                         status=status.HTTP_204_NO_CONTENT)
     else:
+        serializer = DirectorBaseValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         director.name = request.data.get('name')
         director.movies.set(request.data.get('movies'))
         director.save()
@@ -97,6 +118,11 @@ def reviews_view(request):
         data = ReviewsListSerializer(reviews, many=True).data
         return Response(data=data)
     elif request.method == 'POST':
+        serializer = ReviewBaseValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'message': 'review data with error',
+                                  'error': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         review = Review.objects.create(
             text=request.data.get('text'),
             stars=request.data.get('stars')
@@ -121,6 +147,8 @@ def review_item_view(request, id):
         return Response(data={'message': 'Successfully removed!'},
                         status=status.HTTP_204_NO_CONTENT)
     else:
+        serializer = ReviewBaseValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         review.text = request.data.get('text')
         review.stars = request.data.get('stars')
         review.save()
