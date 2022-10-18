@@ -1,6 +1,7 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from .serializers import DirectorsListSerializer, \
     MoviesListSerializer, \
     ReviewsListSerializer, \
@@ -14,7 +15,9 @@ from .models import Director, Movie, Review
 
 # Movies
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def movies_view(request):
+    print(request.user)
     if request.method == "GET":
         movies = Movie.objects.all()
         data = MoviesListSerializer(movies, many=True).data
