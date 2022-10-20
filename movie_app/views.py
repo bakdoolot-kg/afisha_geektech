@@ -2,18 +2,75 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import DirectorsListSerializer, \
-    MoviesListSerializer, \
-    ReviewsListSerializer, \
-    MoviesReviewSerializer, \
-    MovieCreateSerializer, \
-    MovieUpdateSerializer, \
-    DirectorBaseValidateSerializer, ReviewBaseValidateSerializer
-from .serializers import DirectorsListSerializer, MoviesListSerializer, ReviewsListSerializer, MoviesReviewSerializer
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.viewsets import ModelViewSet
+
+from .serializers import (DirectorsListSerializer, MoviesListSerializer, ReviewsListSerializer, MoviesReviewSerializer,
+                          MovieCreateSerializer, MovieUpdateSerializer, DirectorBaseValidateSerializer,
+                          ReviewBaseValidateSerializer, MovieCreateListSerializer)
 from .models import Director, Movie, Review
 
 
+# CBV
+
+# REVIEWS CBV
+class ReviewModelViewSet(ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewsListSerializer
+    pagination_class = PageNumberPagination
+    lookup_field = 'id'
+
+
+# DIRECTOR CBV
+class DirectorListAPIView(ListCreateAPIView):
+    queryset = Director.objects.all()
+    serializer_class = DirectorsListSerializer
+    pagination_class = PageNumberPagination
+
+
+class DirectorItemUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Director.objects.all()
+    serializer_class = DirectorsListSerializer
+    lookup_field = 'id'
+
+
 # Movies
+class MoviesListAPIView(ListCreateAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MovieCreateListSerializer
+    pagination_class = PageNumberPagination
+
+    def post(self, request, *args, **kwargs):
+        serializer = MovieCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'message': 'data with errors',
+                                  'error': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+        movie = Movie.objects.create(
+            title=request.data.get("title"),
+            description=request.data.get("description"),
+            duration=request.data.get("duration"),
+            director_id=request.data.get("director"),
+        )
+        movie.reviews.set(request.data.get("reviews"))
+        movie.save()
+        return Response(status=status.HTTP_201_CREATED,
+                        data={'message': 'Successfully created!'})
+
+
+class MovieItemUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MoviesListSerializer
+    lookup_field = 'id'
+
+
+class MovieReviewsListAPIView(ListCreateAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MoviesReviewSerializer
+    pagination_class = PageNumberPagination
+
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def movies_view(request):

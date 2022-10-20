@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import Director, Movie, Review
 from rest_framework.exceptions import ValidationError
 
+
 # DIRECTOR SERIALIZERS
 class DirectorBaseValidateSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=2, max_length=255)
@@ -59,6 +60,12 @@ class MoviesListSerializer(serializers.ModelSerializer):
         return obj_movie.director.name
 
 
+class MovieCreateListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = 'id title description duration director'.split()
+
+
 class MoviesReviewSerializer(serializers.ModelSerializer):
     # reviews = ReviewsListSerializer(many=True)
     reviews_list = serializers.SerializerMethodField()
@@ -81,7 +88,7 @@ class MovieBaseValidateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, default="Description is empty")
     duration = serializers.DurationField(required=False)
     director = serializers.IntegerField()
-    reviews = serializers.ListField(child=serializers.IntegerField(min_value=1))
+    reviews = serializers.ListField(child=serializers.IntegerField(min_value=1), required=False)
 
     def validate_director(self, director):
         try:
